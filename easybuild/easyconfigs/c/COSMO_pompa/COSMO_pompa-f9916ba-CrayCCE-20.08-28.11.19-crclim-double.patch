@@ -1,0 +1,182 @@
+diff -Nru cosmo_pompa-cpu.orig/cosmo/Options cosmo_pompa-cpu/cosmo/Options
+--- cosmo_pompa-cpu.orig/cosmo/Options	2019-11-29 09:56:39.000000000 +0100
++++ cosmo_pompa-cpu/cosmo/Options	2020-09-03 20:27:22.321845000 +0200
+@@ -1,17 +1,12 @@
+ # compiler
+-F90      = ftn -D__CRAY_FORTRAN__
++F90      = ftn -add-rpath -D__CRAY_FORTRAN__
+ COMPILER = cray
+ 
+ # linker
+ LD       = $(F90)
+ 
+ -include $(ROOT)/Options.$(COMPILER).cpu
+-
+-#PFLAGS  += -DSINGLEPRECISION # run model in single precision
+-
+ -include $(ROOT)/Options.lib.cpu
+ 
+-# bit-repro math
+-CMATH_DIR=/users/charpill/prg/mch/cmath
+-FMATH_DIR=/users/charpill/prg/mch/fmath
+-CC = CC
+\ No newline at end of file
++# ensure usage of cray c++ when compiling C/C++ 
++CC = CC
+diff -Nru cosmo_pompa-cpu.orig/cosmo/Options.cray.cpu cosmo_pompa-cpu/cosmo/Options.cray.cpu
+--- cosmo_pompa-cpu.orig/cosmo/Options.cray.cpu	2019-11-29 09:56:39.000000000 +0100
++++ cosmo_pompa-cpu/cosmo/Options.cray.cpu	2020-09-03 20:34:30.012019000 +0200
+@@ -2,42 +2,40 @@
+ 
+ # global compilation flags
+ FFLAGS   = -ffree # free-form source format
+-FFLAGS   = -N1023 # free-form source format
++FFLAGS  += -N1023 # free-form source format
+ FFLAGS  += -ec # interface checking
+ FFLAGS  += -eC # standard call site checking
+ FFLAGS  += -eI # treat all variables as if an implicit none is there
+ FFLAGS  += -eF # control preprocessor expansion of macros
+-#FFLAGS  += -hkeepfiles # keep .s files
+-FFLAGS  += -hnosecond_underscore # symbol names only have one underscore
++FFLAGS  +=  # symbol names only have one underscore
+ FFLAGS  += -hflex_mp=conservative # reasonably aggressive floating point optimizations
+ FFLAGS  += -Ofp1 # require reasonably strong IEEE standard conformance
+ FFLAGS  += -hadd_paren # automatically adds parenthesis to select associative operations
+ FFLAGS  += -hnoacc # no GPU
++FFLAGS  += -homp # OpenMP support 
++FFLAGS  += -h system_alloc # malloc implementation
+ FFLAGS  += -ra # generates listing
+ 
+ # verbose compilation flags
+ VFLAGS   = -v # show compilation information
+ VFLAGS  += -en # generate message for all nonstandard Fortran usage
+ VFLGAS  += -eo # display all optimization options used
+-#VFLAGS  += -eS # generate assembly language output
+ VFLAGS  += -hmsgs # display optimization messages
+ VFLAGS  += -hnegmsgs # display negative optimization messages
+ VFLAGS  += -m1 # high message level (error, warning, caution and note)
+ VFLAGS  += -T # display all options currently in effect
+ 
+ # force preprocessing flags
+-PPFLAGS   = -DHAS_IOMSG # has debug messages for namelist reads
+-PPFLAGS  += -DASSIM_WKARR_CLEANUP
+-PPFLAGS  += -DASSIM_MDARR_CLEANUP
+-PPFLAGS  += -DCRAY_FIX_PARALLEL_OPTIONAL_LOGICAL
+-PPFLAGS  += -DIEEE_INTR #required when using -Ofp1 for is_nan
+-# perform preprocessing for all source files
+-PFLAGS  = -eZ $(PPFLAGS)
++PFLAGS   = -eZ # perform preprocessing for all source files
++PFLAGS  += -DHAS_IOMSG # has debug messages for namelist reads
++PFLAGS  += -DASSIM_WKARR_CLEANUP
++PFLAGS  += -DASSIM_MDARR_CLEANUP
++PFLAGS  += -DCRAY_FIX_PARALLEL_OPTIONAL_LOGICAL
++PFLAGS  += -DIEEE_INTR #required when using -Ofp1 for is_nan
+ 
+ # ===============================================================
+ # CRCLIM FLAGS
+ # ===============================================================
+-
+ # reproducible flags for cray c++ compiler
+ CFLAGS  = -eZ 
+ CFLAGS += -ec 
+@@ -64,9 +62,8 @@
+ RFLAGS += -eF 
+ RFLAGS += -O1
+ RFLAGS += -eI 
+-RFLAGS += -hnosecond_underscore 
++RFLAGS +=  
+ RFLAGS += -hadd_paren 
+-#RFLAGS += -hfp1
+ RFLAGS += -hfp0
+ RFLAGS += -hflex_mp=intolerant 
+ RFLAGS += -ra 
+@@ -75,8 +72,6 @@
+ RFLAGS += -hnoautothread 
+ RFLAGS += -hfusion0 
+ RFLAGS += -hnopattern 
+-#RFLAGS += -e0
+-#RFLAGS += -ei
+ 
+ # ===============================================================
+ 
+@@ -90,10 +85,6 @@
+ # debugging flags
+ FDBG0    = -O0 # no optimization
+ FDBG0   += -g # debugging support (== -G0)
+-#FDBG0   += -eD # all debugging information (-O0 -g -m2 -R bcdspi -rl) 
+-                # XL : Deactivated this option gives wrong results with the testsuite
+-                # Output variables on p and z levels in YUCHDAT differs. Variables in 
+-                # YUPRTEST file are ok.
+ FDBG0   += -Rb # array bound checking
+ FDBG0   += -Rc # check conformance of array operands
+ FDBG0   += -Rd # directives checking
+@@ -106,4 +97,3 @@
+ 
+ # global linking flags
+ LFLAGS   = -frecord-marker=4 # length of record marker in bytes (for unformatted I/O)
+-
+diff -Nru cosmo_pompa-cpu.orig/cosmo/Options.lib.cpu cosmo_pompa-cpu/cosmo/Options.lib.cpu
+--- cosmo_pompa-cpu.orig/cosmo/Options.lib.cpu	2019-11-29 09:56:39.000000000 +0100
++++ cosmo_pompa-cpu/cosmo/Options.lib.cpu	2020-09-03 20:29:58.897836000 +0200
+@@ -2,7 +2,6 @@
+ 
+ # global libraries and includes
+ LIB      = $(LDFLAGS)
+-
+ INC      = -I.
+ INC     += -I$(ROOT)/$(SRCDIR)
+ 
+@@ -16,38 +15,36 @@
+ 
+ # MPI library
+ MPIL     =
+-MPII     = -D__MPICH2
++MPII     = 
+ 
+ # Grib1 library
+-GRIBDWDL = -L$(INSTALL_DIR)/libgrib1 -lgrib1_$(COMPILER)
++GRIBDWDL = -L${EBROOTLIBGRIB1_CRCLIM} -lgrib1_$(COMPILER)
+ GRIBDWDI =
+ 
+ # Grib-API library
+-GRIBAPI_VERSION = v1.20.0.2
+-GRIBAPIL = -L$(INSTALL_DIR)/libgrib_api/$(GRIBAPI_VERSION)/$(COMPILER)/lib -lgrib_api_f90 -lgrib_api -L$(INSTALL_DIR)/libjasper/lib -ljasper
+-GRIBAPII = -I$(INSTALL_DIR)/libgrib_api/$(GRIBAPI_VERSION)/$(COMPILER)/include
++# GRIBAPI_VERSION = v1.13.1
++GRIBAPIL = -L${EBROOTGRIB_API}/lib -lgrib_api_f90 -lgrib_api -L${EBROOTJASPER}/lib -ljasper
++GRIBAPII = -I${EBROOTGRIB_API}/include
+ 
+ # NetCDF library
+-NETCDFL  =
+-NETCDFI  =
++NETCDFL  = -L$(NETCDF_DIR)/lib -Wl,--as-needed,-lnetcdf,--no-as-needed -Wl,--as-needed,-lnetcdff,--no-as-needed
++NETCDFI  = -I$(NETCDF_DIR)/include
+ 
+ # Synsat library
+-RTTOV7L  = -L$(INSTALL_DIR)/librttov7 -lrttov7_$(COMPILER)
+ RTTOV7I  =
+ RTTOV10L =
+ RTTOV10I =
+ 
+ # Serialization library
+-SERIALBOX  = ${SERIALBOX_DIR}
+-SERIALBOXL = ${SERIALBOX_FORTRAN_LIBRARIES} -lstdc++
+-SERIALBOXI = -I$(SERIALBOX)/include
+- 
++SERIALBOX  = ${EBROOTSERIALBOX}
++SERIALBOXL = -L${EBROOTSERIALBOX}/lib 
++
+ # STELLA library
+-STELLA   = $(STELLA_DIR)
+-STELLAL  = -L$(STELLA)/lib -lCommunicationFramework -ljson -lStella -lgcl -lStellaUtils -lSharedInfrastructure -lstdc++
+-STELLAI  =
++STELLA   = ${EBROOTSTELLA}
++STELLAL  = -L${EBROOTSTELLA}/lib -lCommunicationFramework -ljson -lStella -lgcl -lStellaUtils -lSharedInfrastructure -lstdc++
++STELLAI  = -I${EBROOTSTELLA}/include/STELLA
+ 
+ # Dycore library
+-DYCORE   = $(DYCORE_DIR)
+-DYCOREL  = -L$(DYCORE)/lib -lDycoreWrapper -lDycore
++DYCORE   = ${EBROOTDYCORE}
++DYCOREL  = -L${EBROOTDYCORE}/lib -lDycoreWrapper -lDycore
+ DYCOREI  =
