@@ -1,0 +1,22 @@
+# contributed by Luca Marsella (CSCS)
+name = 'g2clib'
+version = '1.6.2'
+
+homepage = 'https://www.nco.ncep.noaa.gov/pmb/codes/GRIB2/'
+description = """Library contains GRIB2 encoder/decoder ('C' version)."""
+
+toolchain = {'name': 'cpeGNU', 'version': '20.10'}
+
+source_urls = [homepage]
+sources = [SOURCE_TAR]
+#patches = ['g2clib-1.6.0-with-JasPer-2.x.patch']
+
+dependencies = [
+    ('JasPer', '2.0.14'),
+    ('libpng', '1.6.37')
+]
+
+# parallel builds tend to fail
+maxparallel = 1
+
+moduleclass = 'data'
