@@ -1,0 +1,55 @@
+--- g2lib-3.2.0.orig/makefile	2020-12-17 01:57:03.000000000 +0100
++++ g2lib-3.2.0/makefile	2021-01-21 00:06:26.837118750 +0100
+@@ -28,8 +28,7 @@
+ 
+ #  If you want to enable support for BOTH  PNG or JPEG2000 encoding/decoding
+ FDEFS=-DUSE_PNG -DUSE_JPEG2000
+-
+-INCDIR=-I/usrx/local/prod/packages/gnu/4.8.5/jasper/1.900.1/include -I/usrx/local/prod/packages/gnu/4.8.5/libpng/1.2.44/include
++INCDIR=-I$(EBROOTJASPER)/include -I$(EBROOTLIBPNG)/include
+ 
+ LIB=libg2.a
+ 
+@@ -49,13 +48,13 @@
+ # The following was used for INTEL FORTRAN on LINUX
+ # ----- used with 64-bit machine  ---
+ #
+- DEFS=-DLINUX
+- FC=ifort
+- CC=icc
+- MODDIR=.
+- FFLAGS=-O3 -I $(MODDIR)
+- CFLAGS=-O3 $(DEFS) $(INCDIR) -D__64BIT__
+- CPP=cpp -P -C
++# DEFS=-DLINUX
++# FC=ifort
++# CC=icc
++# MODDIR=.
++# FFLAGS=-O3 -I $(MODDIR)
++# CFLAGS=-O3 $(DEFS) $(INCDIR) -D__64BIT__
++# CPP=cpp -P -C
+ 
+ #--------------------------------------
+ # The following was used for XLF on AIX
+@@ -117,14 +116,13 @@
+ # The following was used for GFORTRAN on LINUX
+ # ----- used with 64-bit machine  ---
+ #
+-# DEFS=-DLINUX
+-# FC=gfortran
+-# CC=cc
+-# MODDIR=.
+-# FFLAGS=-O3 -I $(MODDIR)
+-# CFLAGS=-O3 $(DEFS) $(INCDIR) -D__64BIT__
+-# CPP=cpp -P -C
+-
++ DEFS=-DLINUX
++ FC=gfortran
++ CC=gcc
++ MODDIR=.
++ FFLAGS=-O3 -g -I$(MODDIR) -fallow-argument-mismatch -fallow-invalid-boz
++ CFLAGS=-O3 -g $(DEFS) $(INCDIR) -D__64BIT__
++ CPP=cpp -P -C
+ 
+ #--------------------------------------
+ # The following was used for f95 on LINUX
