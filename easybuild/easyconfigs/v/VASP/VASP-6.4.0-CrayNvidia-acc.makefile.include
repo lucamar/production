@@ -71,7 +71,7 @@ NVROOT      = $(CRAY_NVIDIA_PREFIX)
 #OFLAG_IN   = -fast -Mwarperf
 #SOURCE_IN  := nonlr.o
 #
-# Software emulation of quadruple precsion (mandatory)
+# Software emulation of quadruple precision (mandatory)
 QD         = $(NVROOT)/compilers/extras/qd
 LLIBS      += -L$(QD)/lib -lqdmod -lqd
 INCS       += -I$(QD)/include/qd
